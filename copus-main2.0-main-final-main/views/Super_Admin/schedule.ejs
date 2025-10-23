@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Super Admin Schedule Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* --- Root Variables --- */
+        :root {
+            --primary-color-start: #0f2027; /* Dark blue */
+            --primary-color-end: #203a43; /* Darker blue */
+            --secondary-color-start: #2c5364; /* Blue-green */
+            --secondary-color-end: #203a43; /* Darker blue */
+            --text-light: #e0e0e0;
+            --text-dark: #333;
+            --sidebar-width: 280px;
+            --accent-color: #17e891; /* A vibrant green for accents */
+            --danger-color: #e74c3c; /* Red for logout/cancel */
+            --card-bg-transparent: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- Base Styles --- */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
+            color: var(--text-light);
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* This prevents the body from scrolling */
+        }
+
+        .container-fluid {
+            padding: 0;
+        }
+
+        .row {
+            margin: 0;
+        }
+
+        /* --- Header Styles --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: linear-gradient(to right, #ffffff, #f0f0f0);
+            color: var(--text-dark);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            height: 70px;
+        }
+
+        /* --- Table Styles --- */
+        .custom-table {
+            background: transparent !important;
+            color: var(--text-light) !important;
+        }
+
+        .custom-table th {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: var(--text-light) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            padding: 0.75rem;
+            font-weight: 600;
+        }
+
+        .custom-table td {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: var(--text-light) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            padding: 0.75rem;
+        }
+
+        .custom-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .logo img {
+            height: 60px;
+            width: auto;
+            object-fit: contain;
+            margin-left: 10px;
+            margin-top: -5px;
+        }
+
+        .header-icons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-right: 10px;
+        }
+
+        .header-icons i {
+            font-size: 1.5rem;
+            color: #555;
+            cursor: pointer;
+        }
+
+        .user-icon-circle {
+            width: 40px;
+            height: 40px;
+            background-color: #ddd;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .user-icon-circle i {
+            font-size: 1.5rem;
+            color: #777;
+        }
+        /* --- Sidebar --- */
+.custom-sidebar {
+  width: var(--sidebar-width);
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+   background: linear-gradient(to bottom, #11405b, #0f2027);
+  color: var(--text-light);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+}
+
+.custom-sidebar h6 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.custom-sidebar small {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.custom-sidebar hr {
+  border-color: rgba(255, 255, 255, 0.1);
+  margin: 1.5rem 0;
+}
+
+.custom-sidebar a {
+    color: var(--text-light);
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    transition: background 0.3s, color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-weight: bold;
+}.custom-sidebar a i {
+  font-size: 1.25rem;
+}
+
+.custom-sidebar a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--accent-color);
+}
+
+.custom-sidebar a.active {
+  background: linear-gradient(to right, #2c5364, #203a43);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  color: #fff;
+}
+
+.logout-btn {
+  background: linear-gradient(to right, #e74c3c, #c0392b);
+  border: none;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  text-align: left;
+  width: 100%;
+  font-weight: 600;
+  transition: transform 0.2s;
+}
+
+.logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 1rem;
+            width: calc(100% - var(--sidebar-width));
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+        }
+        
+        .card-border {
+            background: var(--card-bg-transparent);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .custom-table {
+    background: white !important;
+    color: #333 !important;
+    border-radius: 10px;
+}
+
+.custom-table th {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+}
+
+.custom-table td {
+    background: white !important;
+    color: #333 !important;
+}
+
+.custom-table tbody tr:hover {
+    background: #f9f9f9 !important;
+}
+
+
+        .badge {
+            font-size: 0.65rem;
+            padding: 0.4em 0.7em;
+            border-radius: 50rem;
+        }
+
+        .observer-entry {
+            display: inline-block;
+            margin-bottom: 3px;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #ffffff;
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1050;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+
+        .toast-container.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-container button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        #pagination .btn {
+            background-color: var(--secondary-color-start);
+            border: 1px solid var(--secondary-color-start);
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+
+        #pagination .btn.active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--text-dark);
+        }
+        
+        /* New CSS for centering pagination */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+        .mt-3.text-start small.text-muted strong {
+    display: block; /* make it take full width */
+    background-color: #f8f9fa; /* light gray background */
+    padding: 10px 15px; /* some padding */
+    border-left: 4px solid #007bff; /* blue left border accent */
+    color: #333; /* darker text color for readability */
+    font-size: 0.9rem; /* slightly smaller font */
+    border-radius: 4px;
+    line-height: 1.4;
+    text-transform: uppercase; /* matches your strong text emphasis */
+}
+
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="custom-sidebar">
+                <h6>Welcome, <%= firstName %> <%= lastName %></h6>
+                <small><%= employeeId %></small>
+                <hr>
+                <a href="/super_admin_copus_result"><i class="bi bi-clipboard-data"></i> Dashboard</a>
+                <a href="/super_admin_user_management"><i class="bi bi-people-fill"></i> User Management</a>
+                <a href="/super_admin_schedule" class="active"><i class="bi bi-calendar-event-fill"></i>  Copus & Schedule</a>
+                <a href="/super_admin_copus_history"><i class="bi bi-clock-history"></i> Copus History</a>
+                <a href="/super_admin_copus_appointments"><i class="bi bi-calendar-check"></i> COPUS Appointments</a>
+                <a href="/super_admin_setting"><i class="bi bi-gear-fill"></i> Account & Profile Settings</a>
+                <hr>
+                <form action="/logout" method="POST">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
+
+            <div class="main-content">
+                <div class="card-border" id="scheduleManagementView">
+                    <% if (typeof errorMessage !== 'undefined') { %>
+                        <div id="customToast" class="toast-container show">
+                            <span><%= errorMessage %></span>
+                            <button onclick="closeToast()">×</button>
+                        </div>
+                    <% } %>
+                    <% if (success_msg && success_msg.length > 0) { %>
+                        <div id="successToast" class="toast-container show" style="background-color: #4CAF50;">
+                            <span><%= success_msg %></span>
+                            <button onclick="closeToast('successToast')">×</button>
+                        </div>
+                    <% } %>
+                    <% if (error_msg && error_msg.length > 0) { %>
+                        <div id="errorToast" class="toast-container show" style="background-color: #f44336;">
+                            <span><%= error_msg %></span>
+                            <button onclick="closeToast('errorToast')">×</button>
+                        </div>
+                    <% } %>
+
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                      <h2 class="mb-0" style="color: #17e891; font-weight: 600;">
+                        <i class="bi bi-calendar-event-fill me-2"></i>ALL SCHEDULES MANAGEMENT
+                      </h2>
+                      <div class="d-flex align-items-center">
+                        <!-- Year Filter -->
+                        <select id="yearFilter" class="form-select form-select-sm me-2" style="width: 140px; background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2);">
+                          <option value="All">All Years</option>
+                          <option value="2023–2024">2023–2024</option>
+                          <option value="2024–2025">2024–2025</option>
+                          <option value="2025–2026">2025–2026</option>
+                          <option value="2026–2027">2026–2027</option>
+                        </select>
+
+                        <!-- Semester Filter -->
+                        <select id="semesterFilter" class="form-select form-select-sm" style="width: 140px; background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2);">
+                          <option value="All">All Semesters</option>
+                          <option value="1st Semester">1st Semester</option>
+                          <option value="2nd Semester">2nd Semester</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Faculty Schedules Title -->
+                    <h5 class="text-success mt-3 mb-3" style="font-weight: 600;">Faculty Schedules</h5>
+
+                    <!-- Table -->
+                    <div class="table-responsive">
+                      <table class="table custom-table">
+                        <thead>
+                          <tr>
+                            <th>Faculty Name</th>
+                            <th>Subject</th>
+                            <th>Subject Type</th>
+                            <th>Department</th>
+                            <th>Year</th>
+                            <th>Semester</th>
+                            <th>Schedule Days</th>
+                            <th>Time</th>
+                            <th>Room</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% if (facultySchedules && facultySchedules.length > 0) { %>
+                            <% facultySchedules.forEach(function(schedule) { %>
+                              <tr>
+                                <td>
+                                  <% if (schedule.faculty_user_id && schedule.faculty_user_id.firstname) { %>
+                                    <%= schedule.faculty_user_id.firstname %> <%= schedule.faculty_user_id.lastname %>
+                                  <% } else if (schedule.faculty_firstname && schedule.faculty_lastname) { %>
+                                    <%= schedule.faculty_firstname %> <%= schedule.faculty_lastname %>
+                                  <% } else { %>
+                                    <span class="text-muted">Unknown</span>
+                                  <% } %>
+                                </td>
+                                <td><%= schedule.faculty_subject_name || 'N/A' %></td>
+                                <td>
+                                  <% if (schedule.subject_type) { %>
+                                    <span class="badge bg-info"><%= schedule.subject_type %></span>
+                                  <% } else { %>
+                                    <span class="text-muted">N/A</span>
+                                  <% } %>
+                                </td>
+                                <td>
+                                  <% if (schedule.faculty_user_id && schedule.faculty_user_id.department) { %>
+                                    <%= schedule.faculty_user_id.department %>
+                                  <% } else if (schedule.faculty_department) { %>
+                                    <%= schedule.faculty_department %>
+                                  <% } else { %>
+                                    <span class="text-muted">N/A</span>
+                                  <% } %>
+                                </td>
+                                <td><%= schedule.school_year || 'N/A' %></td>
+                                <td><%= schedule.semester || 'N/A' %></td>
+                                <td><%= schedule.schedule_display || schedule.day_of_week || 'N/A' %></td>
+                                <td>
+                                  <% if (schedule.start_time && schedule.end_time) { %>
+                                    <%= schedule.start_time %> - <%= schedule.end_time %>
+                                  <% } else { %>
+                                    N/A
+                                  <% } %>
+                                </td>
+                                <td><%= schedule.faculty_room || 'TBA' %></td>
+                                <td>
+                                  <% 
+                                    let badgeClass = 'bg-secondary';
+                                    if (schedule.status === 'scheduled' || schedule.status === 'pending') badgeClass = 'bg-primary';
+                                    else if (schedule.status === 'completed') badgeClass = 'bg-success';
+                                    else if (schedule.status === 'approved') badgeClass = 'bg-warning';
+                                    else if (schedule.status === 'cancelled') badgeClass = 'bg-danger';
+                                  %>
+                                  <span class="badge <%= badgeClass %> text-capitalize">
+                                    <%= schedule.status || 'pending' %>
+                                  </span>
+                                </td>
+                              </tr>
+                            <% }); %>
+                          <% } else { %>
+                            <tr>
+                              <td colspan="10" class="text-center text-muted">No schedule records found.</td>
+                            </tr>
+                          <% } %>
+                        </tbody>
+                      </table>
+                    </div>
+
+<!-- My Observation Schedules Table -->
+<div class="card" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;">
+  <div class="card-header" style="background: rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+    <h5 class="mb-0" style="color: #17e891;">Observer Observation Schedules</h5>
+  </div>
+
+  <table class="table custom-table mb-0">
+    <thead>
+      <tr>
+        <th>Faculty Name</th>
+        <th>Observer Name</th>
+        <th>Subject</th>
+        <th>Subject Type</th>
+        <th>Year</th>
+        <th>Semester</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>COPUS Type</th>
+        <th>Room</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (observerSchedules && observerSchedules.length > 0) { %>
+        <% observerSchedules.forEach(schedule => { %>
+        <tr>
+          <td>
+            <% if (schedule.faculty_user_id && schedule.faculty_user_id.firstname) { %>
+              <%= schedule.faculty_user_id.firstname %> <%= schedule.faculty_user_id.lastname %>
+            <% } else { %>
+              <%= schedule.faculty_name || 'N/A' %>
+            <% } %>
+          </td>
+          <td>
+            <% if (schedule.observer_id && schedule.observer_id.firstname) { %>
+              <%= schedule.observer_id.firstname %> <%= schedule.observer_id.lastname %>
+            <% } else { %>
+              <%= schedule.observer_name || 'N/A' %>
+            <% } %>
+          </td>
+          <td><%= schedule.subject || 'TBA' %></td>
+          <td><%= schedule.subject_type || 'TBA' %></td>
+          <td><%= schedule.year_level || 'TBA' %></td>
+          <td><%= schedule.semester || 'TBA' %></td>
+          <td><%= schedule.observation_date ? new Date(schedule.observation_date).toLocaleDateString() : 'N/A' %></td>
+          <td><%= schedule.start_time %> - <%= schedule.end_time %></td>
+          <td><%= schedule.copus_type || 'TBA' %></td>
+          <td><%= schedule.room || 'TBA' %></td>
+          <td>
+            <% 
+            let badgeClass = 'bg-secondary';
+            if (schedule.status === 'pending') badgeClass = 'bg-primary';
+            else if (schedule.status === 'approved') badgeClass = 'bg-success';
+            else if (schedule.status === 'disapproved') badgeClass = 'bg-danger';
+            else if (schedule.status === 'completed') badgeClass = 'bg-info';
+            else if (schedule.status === 'in_progress') badgeClass = 'bg-warning';
+            else if (schedule.status === 'cancelled') badgeClass = 'bg-dark';
+            %>
+            <span class="badge <%= badgeClass %> text-capitalize"><%= schedule.status %></span>
+          </td>
+          <td>
+            <% if (schedule.status === 'pending') { %>
+              <button class="btn btn-sm btn-success me-1" onclick="approveObserverSchedule('<%= schedule._id %>')">Approve</button>
+              <button class="btn btn-sm btn-danger" onclick="disapproveObserverSchedule('<%= schedule._id %>')">Disapprove</button>
+            <% } else { %>
+              <span class="text-muted">—</span>
+            <% } %>
+          </td>
+        </tr>
+        <% }); %>
+      <% } else { %>
+        <tr>
+          <td colspan="12" class="text-center text-muted">No observation schedules found.</td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script>
+    // Functions for toasts
+    function closeToast(toastId = 'customToast') { // Make it flexible for success/error toasts
+        const toast = document.getElementById(toastId);
+        if (toast) {
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            // Remove from DOM after transition to prevent re-showing on navigation
+            setTimeout(() => toast.remove(), 500);
+        }
+    }
+
+    // Auto-hide the toasts after 5 seconds
+    window.addEventListener('DOMContentLoaded', () => {
+        const errorToast = document.getElementById('customToast'); // Your original error toast
+        const successToast = document.getElementById('successToast');
+        const regularErrorToast = document.getElementById('errorToast'); // For flash messages
+
+        if (errorToast) { setTimeout(() => closeToast('customToast'), 5000); }
+        if (successToast) { setTimeout(() => closeToast('successToast'), 5000); }
+        if (regularErrorToast) { setTimeout(() => closeToast('errorToast'), 5000); }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('tableSearch');
+    const table = document.getElementById('scheduleTable');
+    const tbody = table.getElementsByTagName('tbody')[0];
+    const pagination = document.getElementById('pagination');
+
+    // Get all original table rows. This needs to be done once.
+    const originalRows = Array.from(tbody.querySelectorAll('tr:not(.text-center)'));
+    let filteredRows = [];
+    let currentPage = 1;
+    const rowsPerPage = 5;
+
+    // --- Search Functionality ---
+    function performSearch() {
+        const searchTerm = searchInput.value.toLowerCase();
+        if (searchTerm) {
+            filteredRows = originalRows.filter(row => {
+                const rowText = row.textContent.toLowerCase();
+                return rowText.includes(searchTerm);
+            });
+        } else {
+            // If search is empty, show all rows
+            filteredRows = [...originalRows];
+        }
+        
+        currentPage = 1; // Always reset to the first page on a new search
+        renderTableAndPagination();
+    }
+
+    searchInput.addEventListener('keyup', performSearch);
+
+    // --- Pagination Functionality ---
+    function renderTableAndPagination() {
+        // Clear table body before rendering
+        tbody.innerHTML = ''; 
+
+        if (filteredRows.length === 0) {
+            const noRecordsRow = document.createElement('tr');
+            noRecordsRow.innerHTML = `<td colspan="16" class="text-center">No schedule records found for your search.</td>`;
+            tbody.appendChild(noRecordsRow);
+            pagination.innerHTML = ''; // Hide pagination controls
+            return;
+        }
+
+        const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        
+        filteredRows.slice(startIndex, endIndex).forEach(row => {
+            tbody.appendChild(row); // Append the actual DOM row
+        });
+
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        pagination.innerHTML = ''; // Clear existing buttons
+
+        if (totalPages <= 1) return; // No pagination needed
+
+        const createButton = (text, page) => {
+            const button = document.createElement('button');
+            button.textContent = text;
+            button.classList.add('btn', 'btn-secondary', 'me-2');
+            if (page === currentPage) {
+                button.classList.add('active');
+            }
+            button.disabled = (page < 1 || page > totalPages);
+            button.addEventListener('click', () => {
+                currentPage = page;
+                renderTableAndPagination();
+            });
+            return button;
+        };
+
+        // Previous button
+        pagination.appendChild(createButton('Prev', currentPage - 1));
+
+        // Page number buttons
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+
+        if (currentPage <= 3) {
+            endPage = Math.min(5, totalPages);
+        } else if (currentPage > totalPages - 2) {
+            startPage = Math.max(1, totalPages - 4);
+        }
+
+        if (startPage > 1) {
+            pagination.appendChild(createButton('1', 1));
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.textContent = '...';
+                ellipsis.classList.add('btn', 'btn-secondary', 'disabled', 'me-2');
+                pagination.appendChild(ellipsis);
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pagination.appendChild(createButton(i, i));
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.textContent = '...';
+                ellipsis.classList.add('btn', 'btn-secondary', 'disabled', 'me-2');
+                pagination.appendChild(ellipsis);
+            }
+            pagination.appendChild(createButton(totalPages, totalPages));
+        }
+
+        // Next button
+        pagination.appendChild(createButton('Next', currentPage + 1));
+    }
+    
+    // Filter functionality for Faculty Schedules
+    document.addEventListener("DOMContentLoaded", function () {
+        const yearFilter = document.getElementById("yearFilter");
+        const semesterFilter = document.getElementById("semesterFilter");
+        const tableRows = document.querySelectorAll(".custom-table tbody tr");
+
+        function filterSchedules() {
+            const selectedYear = yearFilter.value;
+            const selectedSemester = semesterFilter.value;
+
+            tableRows.forEach(row => {
+                const year = row.cells[4]?.textContent.trim(); // 5th column = Year
+                const semester = row.cells[5]?.textContent.trim(); // 6th column = Semester
+
+                // Show row if it matches filters or if "All" is selected
+                const matchYear = selectedYear === "All" || year === selectedYear;
+                const matchSemester = selectedSemester === "All" || semester === selectedSemester;
+
+                if (matchYear && matchSemester) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        // Add event listeners
+        yearFilter.addEventListener("change", filterSchedules);
+        semesterFilter.addEventListener("change", filterSchedules);
+    });
+
+    // Approve observer schedule (Super Admin)
+    async function approveObserverSchedule(scheduleId) {
+        if (confirm('Approve this observation schedule?')) {
+            try {
+                const response = await fetch(`/super_admin/schedule/${scheduleId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while approving the schedule.');
+            }
+        }
+    }
+
+    // Disapprove observer schedule (Super Admin)
+    async function disapproveObserverSchedule(scheduleId) {
+        if (confirm('Disapprove this observation schedule?')) {
+            try {
+                const response = await fetch(`/super_admin/schedule/${scheduleId}/disapprove`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while disapproving the schedule.');
+            }
+        }
+    }
+});
+
+</script>
+</html>

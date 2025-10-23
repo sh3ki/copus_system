@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Observer Schedule Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color-start: #0f2027; /* Dark blue */
+            --primary-color-end: #203a43; /* Darker blue */
+            --secondary-color-start: #2c5364; /* Blue-green */
+            --secondary-color-end: #203a43; /* Darker blue */
+            --text-light: #e0e0e0;
+            --text-dark: #333;
+            --sidebar-width: 280px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
+            color: var(--text-light);
+            min-height: 100vh;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Header styles */
+        header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            transition: left 0.3s ease-in-out;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: #fff;
+        }
+        .logo img {
+            height: 40px;
+            margin-right: 15px;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-left: -150px;
+        }
+
+        .header-icons {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .header-icons i {
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .header-icons i:hover {
+            color: #17e891;
+        }
+        .user-icon-circle {
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+        }
+
+        /* Sidebar styles */
+        .custom-sidebar {
+            width: var(--sidebar-width);
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, #101c23, #0f2027);
+            color: var(--text-light);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+        }
+
+        .custom-sidebar h6 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+        
+        .custom-sidebar small {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .custom-sidebar hr {
+            border-color: rgba(255, 255, 255, 0.1);
+            margin: 1.5rem 0;
+        }
+
+        .custom-sidebar a {
+            color: var(--text-light);
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            transition: background 0.3s, color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .custom-sidebar a i {
+            font-size: 1.25rem;
+        }
+
+        .custom-sidebar a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #17e891;
+        }
+
+        .custom-sidebar a.active {
+            background: linear-gradient(to right, #2c5364, #203a43);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            color: #fff;
+        }
+
+        .logout-btn {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            border: none;
+            color: #fff;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            text-align: left;
+            width: 100%;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Main content styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 7rem 2rem 2rem 2rem;
+            transition: margin-left 0.3s ease-in-out;
+            margin-top: -70px;
+        }
+        
+        .card-border {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-light);
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: #17e891;
+            color: var(--text-light);
+            box-shadow: none;
+        }
+
+        .flash-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        .flash-message.success {
+            background-color: rgba(23, 232, 145, 0.2);
+            color: #17e891;
+            border: 1px solid #17e891;
+        }
+        .flash-message.error {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+       .custom-table {
+  background: linear-gradient(to right, #0f2027, #2c5364); /* Dark blue to greenish */
+  color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-table thead {
+  background: rgba(0, 0, 0, 0.2);
+  color: #17e891; /* Accent green for headers */
+}
+
+.custom-table thead th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-table tbody tr {
+  background-color: rgba(255, 255, 255, 0.05);
+  transition: background-color 0.3s ease;
+}
+
+.custom-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.custom-table td, 
+.custom-table th {
+  vertical-align: middle;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Optional: Rounded corners on top only */
+.custom-table thead:first-child th:first-child {
+  border-top-left-radius: 12px;
+}
+.custom-table thead:first-child th:last-child {
+  border-top-right-radius: 12px;
+}
+
+
+        .modal-content {
+            background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
+            color: var(--text-light);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+        .modal-header, .modal-footer {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .modal-title {
+            color: #fff;
+        }
+        .btn-close {
+            filter: invert(1) brightness(2);
+        }
+
+        .btn-success {
+            background-color: #17e891;
+            border-color: #17e891;
+            color: #0f2027;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        .btn-secondary {
+            background-color: #7f8c8d;
+            border-color: #7f8c8d;
+        }
+
+        .badge.bg-warning { background-color: #f1c40f !important; color: #333 !important; }
+        .badge.bg-info { background-color: #3498db !important; color: #fff !important; }
+        .badge.bg-primary { background-color: #3498db !important; color: #fff !important; }
+        .badge.bg-success { background-color: #17e891 !important; color: #333 !important; }
+        .badge.bg-danger { background-color: #e74c3c !important; color: #fff !important; }
+        .badge.bg-secondary { background-color: #7f8c8d !important; color: #fff !important; }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .custom-sidebar {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        .pagination-container {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.pagination {
+  display: inline-block;
+  padding-left: 0;
+  margin: 0;
+  border-radius: 4px;
+}
+
+.pagination li {
+  display: inline;
+}
+
+.pagination a {
+  color: #007bff;
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+  border: 1px solid #ddd;
+  margin: 0 4px;
+  border-radius: 4px;
+}
+
+.pagination a:hover:not(.active) {
+  background-color: #eee;
+}
+
+.pagination a.active {
+  background-color: #007bff;
+  color: white;
+  border: 1px solid #007bff;
+}
+
+        
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <!-- Sidebar -->
+        <div class="custom-sidebar">
+            <h6>Welcome, <%= firstName %> <%= lastName %></h6>
+            <small><%= employeeId %></small>
+            <hr />
+            <a href="/Observer_dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+           
+            <a href="/Observer_copus_result"><i class="bi bi-people-fill"></i> Copus Result</a>
+            <a href="/Observer_copus_history"><i class="bi bi-calendar-event-fill"></i> Copus History</a>
+            <a href="/Observer_copus_appointments"><i class="bi bi-calendar-check"></i> COPUS Appointments</a>
+            <a href="/observer_schedule_management" class="active"><i class="bi bi-clipboard-data"></i> Copus & Schedule </a>
+            <a href="/Observer_setting"><i class="bi bi-gear-fill"></i> Settings</a>
+            <hr />
+            <form action="/logout" method="POST">
+                <button type="submit" class="logout-btn">Logout</button>
+            </form>
+        </div>
+
+        <main class="main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="section-title mb-0">SCHEDULE MANAGEMENT</div>
+                <% if (currentUser && currentUser.role === 'Observer (ALC)') { %>
+                <button class="btn btn-success" id="createScheduleBtn">
+                    <i class="bi bi-plus-circle"></i> Create Observation Schedule
+                </button>
+                <% } %>
+            </div>
+
+            <!-- Flash Messages -->
+            <% if (success_msg && success_msg.length > 0) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= success_msg %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <% } %>
+            <% if (error_msg && error_msg.length > 0) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <%= error_msg %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <% } %>
+<!-- Faculty Schedules (View Availability) -->
+<div class="card mb-4" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;">
+  <div class="card-header d-flex justify-content-between align-items-center" 
+       style="background: rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+    <h5 class="mb-0" style="color: #17e891;">Faculty Schedules (View Availability)</h5>
+
+    <!-- 🔍 Filter Controls -->
+    <div class="d-flex gap-2">
+      <!-- Academic Year Filter -->
+      <select id="filterYearView" class="form-select form-select-sm" style="width: auto;">
+        <option value="">All Years</option>
+        <option value="2023-2024">2023–2024</option>
+        <option value="2024-2025">2024–2025</option>
+        <option value="2025-2026">2025–2026</option>
+        <option value="2026-2027">2026–2027</option>
+      </select>
+
+      <!-- Semester Filter -->
+      <select id="filterSemesterView" class="form-select form-select-sm" style="width: auto;">
+        <option value="">All Semesters</option>
+        <option value="1st Semester">1st Semester</option>
+        <option value="2nd Semester">2nd Semester</option>
+      </select>
+    </div>
+  </div>
+<div class="card-body">
+  <div class="table-responsive">
+    <table class="table custom-table">
+      <thead>
+        <tr>
+          <th>Faculty Name</th>
+          <th>Department</th>
+          <th>Subject</th>
+          <th>Subject Type</th> <!-- ✅ Added column -->
+          <th>Year</th>
+          <th>Semester</th>
+          <th>Schedule Days</th>
+          <th>Time</th>
+          <th>Room</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="facultyScheduleBodyView">
+        <% if (facultySchedules && facultySchedules.length > 0) { %>
+          <% facultySchedules.forEach(schedule => { %>
+            <tr data-year="<%= schedule.school_year %>" data-semester="<%= schedule.semester %>">
+              <!-- Faculty Name -->
+              <td>
+                <% if (schedule.faculty_user_id && schedule.faculty_user_id.firstname) { %>
+                  <%= schedule.faculty_user_id.firstname %> <%= schedule.faculty_user_id.lastname %>
+                <% } else if (schedule.faculty_firstname && schedule.faculty_lastname) { %>
+                  <%= schedule.faculty_firstname %> <%= schedule.faculty_lastname %>
+                <% } else { %>
+                  <span class="text-muted">Unknown</span>
+                <% } %>
+              </td>
+
+              <!-- Department -->
+              <td>
+                <% if (schedule.faculty_user_id && schedule.faculty_user_id.department) { %>
+                  <%= schedule.faculty_user_id.department %>
+                <% } else if (schedule.faculty_department) { %>
+                  <%= schedule.faculty_department %>
+                <% } else { %>
+                  <span class="text-muted">N/A</span>
+                <% } %>
+              </td>
+
+              <!-- Subject -->
+              <td><%= schedule.faculty_subject_name || 'N/A' %></td>
+
+              <!-- Subject Type -->
+              <td>
+                <% if (schedule.subject_type) { %>
+                  <span class="badge bg-info"><%= schedule.subject_type %></span>
+                <% } else { %>
+                  <span class="text-muted">N/A</span>
+                <% } %>
+              </td>
+
+              <!-- Year -->
+              <td><%= schedule.school_year || 'N/A' %></td>
+
+              <!-- Semester -->
+              <td><%= schedule.semester || 'N/A' %></td>
+
+              <!-- Schedule Days -->
+              <td><%= schedule.schedule_display || schedule.day_of_week || 'N/A' %></td>
+
+              <!-- Time -->
+              <td>
+                <% if (schedule.start_time && schedule.end_time) { %>
+                  <%= schedule.start_time %> - <%= schedule.end_time %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+
+              <!-- Room -->
+              <td><%= schedule.faculty_room || 'TBA' %></td>
+
+              <!-- Status -->
+              <td>
+                <% 
+                  let badgeClass = 'bg-secondary';
+                  if (schedule.status === 'scheduled' || schedule.status === 'pending') badgeClass = 'bg-primary';
+                  else if (schedule.status === 'completed') badgeClass = 'bg-success';
+                  else if (schedule.status === 'approved') badgeClass = 'bg-warning';
+                  else if (schedule.status === 'cancelled') badgeClass = 'bg-danger';
+                %>
+                <span class="badge <%= badgeClass %> text-capitalize">
+                  <%= schedule.status || 'pending' %>
+                </span>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="10" class="text-center text-muted">No faculty schedules found.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+    <!-- My Observer Schedules Table -->
+<div class="card" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;">
+    <div class="card-header" style="background: rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <h5 class="mb-0" style="color: #17e891;">My Observation Schedules</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th>Faculty Name</th>
+                        <th>Subject</th>
+                        <th>Subject Type</th>
+                        <th>Year</th>
+                        <th>Semester</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>COPUS Type</th>
+                        <th>Room</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (observerSchedules && observerSchedules.length > 0) { %>
+                        <% observerSchedules.forEach(schedule => { %>
+                        <tr>
+                            <td>
+                                <% if (schedule.faculty_user_id && schedule.faculty_user_id.firstname) { %>
+                                    <%= schedule.faculty_user_id.firstname %> <%= schedule.faculty_user_id.lastname %>
+                                <% } else { %>
+                                    <%= schedule.faculty_name || 'N/A' %>
+                                <% } %>
+                            </td>
+                            <td><%= schedule.subject || 'TBA' %></td>
+                            <td><%= schedule.subject_type || 'TBA' %></td>
+                            <td><%= schedule.year_level || 'TBA' %></td>
+                            <td><%= schedule.semester || 'TBA' %></td>
+                            <td><%= schedule.observation_date ? new Date(schedule.observation_date).toLocaleDateString() : 'N/A' %></td>
+                            <td><%= schedule.start_time %> - <%= schedule.end_time %></td>
+                            <td><%= schedule.copus_type || 'TBA' %></td>
+                            <td><%= schedule.room || 'TBA' %></td>
+                            <td>
+                                <% 
+                                let badgeClass = 'bg-secondary';
+                                if (schedule.status === 'pending') badgeClass = 'bg-primary';
+                                else if (schedule.status === 'scheduled') badgeClass = 'bg-info';
+                                else if (schedule.status === 'completed') badgeClass = 'bg-success';
+                                else if (schedule.status === 'in_progress') badgeClass = 'bg-warning';
+                                else if (schedule.status === 'cancelled') badgeClass = 'bg-danger';
+                                else if (schedule.status === 'rescheduled') badgeClass = 'bg-info';
+                                %>
+                                <span class="badge <%= badgeClass %> text-capitalize"><%= schedule.status %></span>
+                            </td>
+              <td>
+                <% 
+                  // Helper flags for button rendering
+                  const startedById = schedule.startedBy ? (typeof schedule.startedBy === 'object' ? (schedule.startedBy._id || schedule.startedBy).toString() : schedule.startedBy.toString()) : null;
+                  const isStarted = !!startedById;
+                  const isStartedByCurrent = isStarted && startedById === (currentUser._id ? currentUser._id.toString() : currentUser.id);
+                %>
+                <% if (currentUser.role === 'Observer (SLC)') { %>
+                  <% if (schedule.status === 'pending') { %>
+                    <button class="btn btn-sm btn-success" onclick="approveSchedule('<%= schedule._id %>')">Approve</button>
+                    <button class="btn btn-sm btn-danger" onclick="disapproveSchedule('<%= schedule._id %>')">Disapprove</button>
+                  <% } else if (schedule.status === 'approved') { %>
+                    <% if (!isStarted) { %>
+                      <button class="btn btn-sm btn-warning" onclick="startCopus('<%= schedule._id %>')">Start COPUS</button>
+                    <% } else if (isStartedByCurrent) { %>
+                      <button class="btn btn-sm btn-info" onclick="startCopus('<%= schedule._id %>')">
+                        <i class="bi bi-play-circle"></i> Continue COPUS
+                      </button>
+                    <% } else { %>
+                      <button class="btn btn-sm btn-secondary" disabled>Ongoing COPUS</button>
+                    <% } %>
+                  <% } else if (schedule.status === 'in_progress') { %>
+                    <% if (isStartedByCurrent) { %>
+                      <button class="btn btn-sm btn-info" onclick="startCopus('<%= schedule._id %>')">
+                        <i class="bi bi-play-circle"></i> Continue COPUS
+                      </button>
+                    <% } else { %>
+                      <button class="btn btn-sm btn-secondary" disabled>Ongoing COPUS</button>
+                    <% } %>
+                  <% } else if (schedule.status === 'completed') { %>
+                    <span class="text-muted">Completed</span>
+                  <% } else { %>
+                    <span class="text-muted">—</span>
+                  <% } %>
+                <% } else if (currentUser.role === 'Observer (ALC)') { %>
+                  <% // ALC can start immediately regardless of approval %>
+                  <% if (schedule.status === 'completed') { %>
+                    <span class="text-muted">Completed</span>
+                  <% } else if (!isStarted) { %>
+                    <button class="btn btn-sm btn-warning" onclick="startCopus('<%= schedule._id %>')">Start COPUS</button>
+                  <% } else if (isStartedByCurrent) { %>
+                    <button class="btn btn-sm btn-info" onclick="startCopus('<%= schedule._id %>')">
+                      <i class="bi bi-play-circle"></i> Continue COPUS
+                    </button>
+                  <% } else { %>
+                    <button class="btn btn-sm btn-secondary" disabled>Ongoing COPUS</button>
+                  <% } %>
+                <% } else { %>
+                  <% // Other roles (Admin, Super Admin) - maintain existing behavior similar to SLC %>
+                  <% if (schedule.status === 'pending') { %>
+                    <span class="text-muted">Awaiting action</span>
+                  <% } else if (schedule.status === 'approved') { %>
+                    <% if (!isStarted) { %>
+                      <button class="btn btn-sm btn-warning" onclick="startCopus('<%= schedule._id %>')">Start COPUS</button>
+                    <% } else if (isStartedByCurrent) { %>
+                      <button class="btn btn-sm btn-info" onclick="startCopus('<%= schedule._id %>')">
+                        <i class="bi bi-play-circle"></i> Continue COPUS
+                      </button>
+                    <% } else { %>
+                      <button class="btn btn-sm btn-secondary" disabled>Ongoing COPUS</button>
+                    <% } %>
+                  <% } else if (schedule.status === 'in_progress') { %>
+                    <% if (isStartedByCurrent) { %>
+                      <button class="btn btn-sm btn-info" onclick="startCopus('<%= schedule._id %>')">
+                        <i class="bi bi-play-circle"></i> Continue COPUS
+                      </button>
+                    <% } else { %>
+                      <button class="btn btn-sm btn-secondary" disabled>Ongoing COPUS</button>
+                    <% } %>
+                  <% } else if (schedule.status === 'completed') { %>
+                    <span class="text-muted">Completed</span>
+                  <% } else { %>
+                    <span class="text-muted">—</span>
+                  <% } %>
+                <% } %>
+              </td>
+                        </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="11" class="text-center text-muted">No observation schedules created yet.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+   <!-- Create Observation Schedule Modal -->
+  <div class="modal fade" id="createScheduleModal" tabindex="-1" aria-labelledby="createScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createScheduleModalLabel">Create Observation Schedule</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="createScheduleForm">
+          <div class="modal-body">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="faculty_user_id" class="form-label">Faculty Member *</label>
+                <select class="form-select" id="faculty_user_id" name="faculty_user_id" required>
+                  <option value="">Select Faculty Member</option>
+                  <% if (facultyUsers && facultyUsers.length > 0) { %>
+                    <% facultyUsers.filter(faculty => faculty.role === 'Faculty').forEach(faculty => { %>
+                      <option value="<%= faculty._id %>">
+                        <%= faculty.firstname %> <%= faculty.lastname %> - <%= faculty.department %>
+                      </option>
+                    <% }); %>
+                  <% } %>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="date" class="form-label">Observation Date *</label>
+                <input type="date" class="form-control" id="date" name="date" required>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="start_time" class="form-label">Start Time *</label>
+                <input type="time" class="form-control" id="start_time" name="start_time" required>
+              </div>
+              <div class="col-md-6">
+                <label for="end_time" class="form-label">End Time *</label>
+                <input type="time" class="form-control" id="end_time" name="end_time" required>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="copus_type" class="form-label">COPUS Type *</label>
+                <select class="form-select" id="copus_type" name="copus_type" required>
+                  <option value="">Select a faculty member first</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="room" class="form-label">Room *</label>
+                <input type="text" class="form-control" id="room" name="room" placeholder="e.g., Room 101" required>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="year_level" class="form-label">Year/Grade Level *</label>
+                <select class="form-select" id="year_level" name="year_level" required>
+                  <option value="">Select Year/Grade Level</option>
+                  <option value="1st Year">1st Year</option>
+                  <option value="2nd Year">2nd Year</option>
+                  <option value="3rd Year">3rd Year</option>
+                  <option value="4th Year">4th Year</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="semester" class="form-label">Semester *</label>
+                <select class="form-select" id="semester" name="semester" required>
+                  <option value="">Select Semester</option>
+                  <option value="1st Semester">1st Semester</option>
+                  <option value="2nd Semester">2nd Semester</option>
+                </select>
+              </div>
+            </div>
+
+           <div class="row mb-3">
+  <div class="col-md-12">
+    <label for="subject_name" class="form-label">Subject *</label>
+    <select class="form-select" id="subject_name" name="subject_name" required>
+      <option value="">Select Subject</option>
+      <option value="ITE 260 Computer Programming 1">ITE 260 Computer Programming 1</option>
+      <option value="ITE 366 Introduction to Computing">ITE 366 Introduction to Computing</option>
+      <option value="ITE 048 Discrete Structure">ITE 048 Discrete Structure</option>
+      <option value="ITE 186 Computer Programming 2">ITE 186 Computer Programming 2</option>
+      <option value="ITE 399 Human Computer Interaction 1">ITE 399 Human Computer Interaction 1</option>
+      <option value="ITE 031 Data Structures and Algorithms">ITE 031 Data Structures and Algorithms</option>
+      <option value="ITE 083 IT Project Management">ITE 083 IT Project Management</option>
+      <option value="ITE 292 Networking 1">ITE 292 Networking 1</option>
+      <option value="ITE 298 Information Management">ITE 298 Information Management</option>
+      <option value="ITE 300 Object Oriented Programming">ITE 300 Object Oriented Programming</option>
+      <option value="ITE 308 Web System and Technologies">ITE 308 Web System and Technologies</option>
+      <option value="ITE 380 Human Computer Interaction 2">ITE 380 Human Computer Interaction 2</option>
+      <option value="ITE 393 Applications Development and Emerging Technologies">ITE 393 Applications Development and Emerging Technologies</option>
+      <option value="ITE 400 Systems Integration and Architecture">ITE 400 Systems Integration and Architecture</option>
+      <option value="ITE 302 Information Assurance and Security 1">ITE 302 Information Assurance and Security 1</option>
+      <option value="ITE 307 Quantitative Methods (including Modeling and Simulation)">ITE 307 Quantitative Methods (including Modeling and Simulation)</option>
+      <option value="ITE 314 Advanced Database Systems">ITE 314 Advanced Database Systems</option>
+      <option value="ITE 353 Data Scalability and Analytics">ITE 353 Data Scalability and Analytics</option>
+      <option value="ITE 359 Networking 2">ITE 359 Networking 2</option>
+      <option value="ITE 387 Advanced Programming">ITE 387 Advanced Programming</option>
+      <option value="ITE 235 Game Development">ITE 235 Game Development</option>
+      <option value="ITE 293 Systems Administration and Maintenance">ITE 293 Systems Administration and Maintenance</option>
+      <option value="ITE 309 Capstone Project and Research 1">ITE 309 Capstone Project and Research 1</option>
+      <option value="ITE 370 Information Assurance and Security 2">ITE 370 Information Assurance and Security 2</option>
+      <option value="ITE 386 Cloud Programming">ITE 386 Cloud Programming</option>
+      <option value="ITE 401 Platform Technologies">ITE 401 Platform Technologies</option>
+      <option value="BAM 285 Business Analysis for IT">BAM 285 Business Analysis for IT</option>
+      <option value="ITE 310 Capstone Project and Research 2">ITE 310 Capstone Project and Research 2</option>
+      <option value="ITE 367 Managing IT Resources">ITE 367 Managing IT Resources</option>
+      <option value="ITE 381 IT Business Solutions">ITE 381 IT Business Solutions</option>
+    </select>
+  </div>
+</div>
+ <div class="col-md-6">
+              <label for="subject_type" class="form-label">Subject Type *</label>
+              <select class="form-select" id="subject_type" name="subject_type" required>
+                <option value="">Select Subject Type</option>
+                <option value="Lecture">Lecture</option>
+                <option value="Laboratory">Laboratory</option>
+                <option value="Both">Lecture & Laboratory</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-plus-circle"></i> Create Schedule
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Get observer schedules for COPUS progression checking
+  // Embed server data safely for JS parsing
+  const observerSchedules = JSON.parse('<%- JSON.stringify(observerSchedules || []) %>');
+        
+        console.log('Observer schedules loaded:', observerSchedules);
+        
+        // All possible COPUS types
+        // Define all COPUS types and their dependencies
+        const allCopusTypes = ['Copus 1', 'Copus 2', 'Copus 3'];
+        
+        // Function to check COPUS completion for a faculty member in a semester
+        function checkCopusCompletion(facultyId, semester) {
+            if (!facultyId || !semester) return { copus1Done: false, copus2Done: false, copus3Done: false };
+            
+            const facultySchedules = observerSchedules.filter(schedule => 
+                schedule.faculty_user_id && 
+                schedule.faculty_user_id.toString() === facultyId.toString() &&
+                schedule.semester === semester &&
+                schedule.status === 'completed'
+            );
+            
+            const copus1Done = facultySchedules.some(s => s.copus_type === 'Copus 1' && s.isCopus1Done);
+            const copus2Done = facultySchedules.some(s => s.copus_type === 'Copus 2' && s.isCopus2Done);
+            const copus3Done = facultySchedules.some(s => s.copus_type === 'Copus 3' && s.isCopus3Done);
+            
+            return { copus1Done, copus2Done, copus3Done };
+        }
+        
+        // Function to get available COPUS types for faculty in a semester
+        function getAvailableCopusTypes(facultyId, semester) {
+            if (!facultyId || !semester) return [];
+            
+            const completion = checkCopusCompletion(facultyId, semester);
+            const availableTypes = [];
+            
+            // Can always schedule Copus 1 if not done
+            if (!completion.copus1Done) {
+                availableTypes.push('Copus 1');
+            }
+            // Can schedule Copus 2 only if Copus 1 is done
+            if (completion.copus1Done && !completion.copus2Done) {
+                availableTypes.push('Copus 2');
+            }
+            // Can schedule Copus 3 only if Copus 2 is done
+            if (completion.copus2Done && !completion.copus3Done) {
+                availableTypes.push('Copus 3');
+            }
+            
+            return availableTypes;
+        }
+        
+        // Function to check if 1st semester is completed
+        function isFirstSemesterCompleted(facultyId) {
+            if (!facultyId) return false;
+            
+            const firstSemSchedules = observerSchedules.filter(schedule => 
+                schedule.faculty_user_id && 
+                schedule.faculty_user_id.toString() === facultyId.toString() &&
+                schedule.semester === '1st Semester' &&
+                schedule.status === 'completed'
+            );
+            
+            return firstSemSchedules.length > 0;
+        }
+        
+        // Function to populate COPUS type dropdown
+        function populateCopusTypeDropdown() {
+            const facultyId = document.getElementById('faculty_user_id').value;
+            const semester = document.getElementById('semester').value;
+            const copusSelect = document.getElementById('copus_type');
+            
+            copusSelect.innerHTML = '';
+            
+            if (!facultyId) {
+                copusSelect.innerHTML = '<option value="">Select a faculty member first</option>';
+                copusSelect.disabled = true;
+                return;
+            }
+            
+            if (!semester) {
+                copusSelect.innerHTML = '<option value="">Select semester first</option>';
+                copusSelect.disabled = true;
+                return;
+            }
+            
+            const availableTypes = getAvailableCopusTypes(facultyId, semester);
+            const completion = checkCopusCompletion(facultyId, semester);
+            
+            console.log(`Faculty ${facultyId}, Semester ${semester}:`, completion, 'Available:', availableTypes);
+            
+            if (availableTypes.length === 0) {
+                copusSelect.innerHTML = '<option value="">All COPUS types completed for this semester</option>';
+                copusSelect.disabled = true;
+            } else {
+                copusSelect.innerHTML = '<option value="">Select COPUS Type</option>';
+                availableTypes.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    copusSelect.appendChild(option);
+                });
+                copusSelect.disabled = false;
+            }
+        }
+        
+        // Add event listeners
+        document.getElementById('faculty_user_id').addEventListener('change', populateCopusTypeDropdown);
+        document.getElementById('semester').addEventListener('change', function() {
+            const facultyId = document.getElementById('faculty_user_id').value;
+            const semester = this.value;
+            
+            // Check if 2nd semester selected but 1st not completed
+            if (semester === '2nd Semester' && facultyId && !isFirstSemesterCompleted(facultyId)) {
+                alert('1st Semester must be completed before scheduling 2nd Semester observations.');
+                this.value = '';
+                return;
+            }
+            
+            populateCopusTypeDropdown();
+        });
+
+        // Handle create schedule button
+        const createScheduleBtn = document.getElementById('createScheduleBtn');
+        if (createScheduleBtn) {
+            createScheduleBtn.addEventListener('click', function() {
+                // Reset form when modal opens
+                document.getElementById('createScheduleForm').reset();
+                document.getElementById('copus_type').innerHTML = '<option value="">Select a faculty member first</option>';
+                const modal = new bootstrap.Modal(document.getElementById('createScheduleModal'));
+                modal.show();
+            });
+        }
+
+        // Handle form submission
+        document.getElementById('createScheduleForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Add sendNotification default
+            if (!data.sendNotification) {
+                data.sendNotification = true;
+            }
+            
+            try {
+                const response = await fetch('/observer/create-schedule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                // Check if response is OK and is JSON
+                const contentType = response.headers.get('content-type');
+                
+                // If it's not JSON (HTML redirect), handle session expiry
+                if (!contentType || !contentType.includes('application/json')) {
+                    alert('Your session has expired. Please log in again.');
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                // Handle authentication errors
+                if (response.status === 401 || result.redirect === '/login') {
+                    alert(result.message || 'Your session has expired. Please log in again.');
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                if (result.success) {
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('createScheduleModal')).hide();
+                    
+                    // Show success message and reload page
+                    alert('Observation schedule created successfully!');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while creating the schedule. Please check your connection and try again.');
+            }
+        });
+
+        // Handle schedule status updates
+        async function markInProgress(scheduleId) {
+            if (confirm('Mark this observation as in progress?')) {
+                try {
+                    const response = await fetch(`/observer/schedule/${scheduleId}/start`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        // Navigate to the COPUS evaluation page
+                        if (result.redirectUrl) {
+                            window.location.href = result.redirectUrl;
+                        } else {
+                            // Fallback to page reload if no redirect URL is provided
+                            location.reload();
+                        }
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('An error occurred.');
+                }
+            }
+        }
+
+        async function markCompleted(scheduleId) {
+            if (confirm('Mark this observation as completed?')) {
+                try {
+                    const response = await fetch(`/observer/schedule/${scheduleId}/complete`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('An error occurred.');
+                }
+            }
+        }
+
+        async function cancelSchedule(scheduleId) {
+            if (confirm('Cancel this observation schedule?')) {
+                try {
+                    const response = await fetch(`/observer/schedule/${scheduleId}/cancel`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('An error occurred.');
+                }
+            }
+        }
+
+        // Approve schedule (SLC only)
+        async function approveSchedule(scheduleId) {
+            if (confirm('Approve this observation schedule?')) {
+                try {
+                    const response = await fetch(`/observer/schedule/${scheduleId}/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while approving the schedule.');
+                }
+            }
+        }
+
+        // Disapprove schedule (SLC only)
+        async function disapproveSchedule(scheduleId) {
+            if (confirm('Disapprove this observation schedule?')) {
+                try {
+                    const response = await fetch(`/observer/schedule/${scheduleId}/disapprove`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while disapproving the schedule.');
+                }
+            }
+        }
+
+        // Start COPUS observation
+    async function startCopus(scheduleId) {
+      try {
+        const response = await fetch(`/observer/schedule/${scheduleId}/start-copus`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        // Handle specific HTTP statuses
+        if (response.status === 409) {
+          // Conflict: already started by someone else
+          const body = await response.json().catch(() => ({}));
+          alert(body.message || 'COPUS has already been started by another user.');
+          // Refresh to update buttons (show Ongoing COPUS)
+          return location.reload();
+        }
+
+        const result = await response.json();
+        if (response.ok && result.success && result.redirectUrl) {
+          window.location.href = result.redirectUrl;
+        } else {
+          alert('Error: ' + (result.message || 'Unable to start COPUS observation'));
+          // Optionally refresh to show current state
+          location.reload();
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while starting the COPUS observation.');
+      }
+    }
+
+        // Set minimum date to today
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+          document.getElementById('filterYearView').addEventListener('change', filterFacultyView);
+  document.getElementById('filterSemesterView').addEventListener('change', filterFacultyView);
+
+  function filterFacultyView() {
+    const selectedYear = document.getElementById('filterYearView').value;
+    const selectedSemester = document.getElementById('filterSemesterView').value;
+
+    document.querySelectorAll('#facultyScheduleBodyView tr').forEach(row => {
+      const rowYear = row.getAttribute('data-year');
+      const rowSem = row.getAttribute('data-semester');
+      const matchYear = !selectedYear || rowYear === selectedYear;
+      const matchSem = !selectedSemester || rowSem === selectedSemester;
+
+      if (matchYear && matchSem) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+    </script>
+</body>
+</html>

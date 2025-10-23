@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Super Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* --- Root Variables --- */
+:root {
+  --primary-color-start: #0f2027; /* Dark blue */
+  --primary-color-end: #203a43; /* Darker blue */
+  --secondary-color-start: #2c5364; /* Blue-green */
+  --secondary-color-end: #203a43; /* Darker blue */
+  --text-light: #e0e0e0;
+  --text-dark: #333;
+  --sidebar-width: 280px;
+  --accent-color: #17e891; /* A vibrant green for accents */
+  --danger-color: #e74c3c; /* Red for logout/cancel */
+  --card-bg-transparent: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Base Styles --- */
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
+  color: var(--text-light);
+  min-height: 100vh;
+  margin: 0;
+}
+
+.container-fluid {
+  padding: 0;
+}
+
+.row {
+  margin: 0;
+}
+
+/* --- Header Styles --- */
+.dashboard-header {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  z-index: 1000;
+
+  /* Center the header horizontally and vertically */
+  display: flex;
+  justify-content: center; /* Centers content horizontally */
+  align-items: center; /* Centers vertically */
+  gap: 2rem;
+
+  padding: 1rem 2rem;
+  transition: left 0.3s ease-in-out;
+}
+
+/* To make the left and right elements aligned but still centered overall */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 90%; /* Centers header items while keeping padding */
+  max-width: 1200px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo img {
+  width: 50px;
+  height: auto;
+}
+
+.header-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.header-right i {
+  font-size: 1.5rem;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.header-right i:hover {
+  color: var(--accent-color);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-icon-circle {
+  background: rgba(255, 255, 255, 0.2);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.25rem;
+  color: var(--text-light);
+}
+
+.welcome-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+/* --- Sidebar --- */
+.custom-sidebar {
+  width: var(--sidebar-width);
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, #11405b, #0f2027);
+  color: var(--text-light);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+}
+
+.custom-sidebar h6 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.custom-sidebar small {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.custom-sidebar hr {
+  border-color: rgba(255, 255, 255, 0.1);
+  margin: 1.5rem 0;
+}
+
+.custom-sidebar a {
+    color: var(--text-light);
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    transition: background 0.3s, color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-weight: bold;
+}.custom-sidebar a i {
+  font-size: 1.25rem;
+}
+
+.custom-sidebar a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--accent-color);
+}
+
+.custom-sidebar a.active {
+  background: linear-gradient(to right, #2c5364, #203a43);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  color: #fff;
+}
+
+.logout-btn {
+  background: linear-gradient(to right, #e74c3c, #c0392b);
+  border: none;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  text-align: left;
+  width: 100%;
+  font-weight: 600;
+  transition: transform 0.2s;
+}
+
+.logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Main Content --- */
+.baba {
+  margin-left: 330px;
+  margin-top: 80px; /* Gives space below centered header */
+  padding: 0 1rem 3rem 3rem;
+  transition: margin-left 0.3s ease-in-out;
+  height: auto;
+  
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Metric Cards --- */
+.metric-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: var(--card-bg-transparent);
+  backdrop-filter: blur(5px);
+  border: 1px solid var(--border-color);
+  border-radius: 15px;
+  padding: 2rem;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.metric-icon {
+  font-size: 2.5rem;
+  color: var(--accent-color);
+  margin-bottom: 0.5rem;
+}
+
+.metric-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.metric-label {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* --- Chart and Table Styles --- */
+.he {
+  background: var(--card-bg-transparent);
+  backdrop-filter: blur(5px);
+  border: 1px solid var(--border-color);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 1024px) {
+  .custom-sidebar {
+    transform: translateX(-100%);
+  }
+  .baba {
+    margin-left: 0;
+  }
+  .dashboard-header {
+    left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  .baba {
+    margin-top: 120px;
+  }
+}
+
+</style>          
+</head>
+<body>
+  <header>
+    <div class="logo">
+  <img src="/images/copus.png" alt="COPUS Logo">
+</div>
+
+    <div class="header-icons">
+     <i class="bi bi-bell-fill" style="color: black; cursor:pointer;" data-bs-toggle="modal" data-bs-target="#notificationModal"></i>
+
+      <div class="user-icon-circle">
+        <i class="bi bi-person-fill"></i>
+      </div>
+      <i class="bi bi-caret-down-fill"></i>
+    </div>
+  </header>  
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="custom-sidebar">
+        <h6>Welcome, <%= firstName %> <%= lastName %></h6>
+        <small><%= employeeId %></small>
+        <hr>
+        <a href="/super_admin_copus_result" class="active"><i class="bi bi-clipboard-data"></i> Dashboard</a>
+        <a href="/super_admin_user_management"><i class="bi bi-people-fill"></i> User Management</a>
+        <a href="/super_admin_schedule"><i class="bi bi-calendar-event-fill"></i>  Copus & Schedule</a>
+        <a href="/super_admin_copus_history"><i class="bi bi-clock-history"></i> Copus History</a>
+        <a href="/super_admin_copus_appointments"><i class="bi bi-calendar-check"></i> COPUS Appointments</a>
+        <a href="/super_admin_setting"><i class="bi bi-gear-fill"></i> Account & Profile Settings</a>
+        <hr>
+        <form action="/logout" method="POST">
+          <button type="submit" class="logout-btn">Logout</button>
+        </form> 
+      </div>      
+
+      <!-- Main content -->
+     <div class="baba col-md-9 mt-3">
+               
+        <div class="table-responsive">
+       
+        </div>
+            <!-- Charts Section -->
+            <div class="charts-section">
+               
+                
+                <!-- Top Overall Score Chart -->
+                <div class="chart-card">
+                    <h5>🏆 Top Overall Score</h5>
+                    <canvas id="topOverallChart" width="100%" height="300"></canvas>
+                </div>
+                
+                <!-- Top 10 Highest Scores Chart -->
+                <div class="chart-card">
+                    <h5>📈 Top 10 Highest Scores</h5>
+                    <canvas id="topHighestChart" width="100%" height="300"></canvas>
+                </div>
+                
+                <!-- Top 10 Lowest Scores Chart -->
+                <div class="chart-card">
+                    <h5>📉 Top 10 Lowest Scores</h5>
+                    <canvas id="topLowestChart" width="100%" height="300"></canvas>
+                </div>
+            </div>
+      </div>
+    </div>
+
+  </div>
+  <script src="/js/Super_Admin/dashboard.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Initialize Chart Data (placeholder - should come from server)
+    const chartData = {
+        topOverall: {
+            faculty_name: 'Top Faculty',
+            overall_percentage: 95,
+            final_rating: 'Excellent'
+        },
+        topHighest: [
+            { faculty_name: 'Faculty A', overall_percentage: 95 },
+            { faculty_name: 'Faculty B', overall_percentage: 92 },
+            { faculty_name: 'Faculty C', overall_percentage: 89 },
+            { faculty_name: 'Faculty D', overall_percentage: 87 },
+            { faculty_name: 'Faculty E', overall_percentage: 85 }
+        ],
+        topLowest: [
+            { faculty_name: 'Faculty F', overall_percentage: 65 },
+            { faculty_name: 'Faculty G', overall_percentage: 68 },
+            { faculty_name: 'Faculty H', overall_percentage: 70 },
+            { faculty_name: 'Faculty I', overall_percentage: 72 },
+            { faculty_name: 'Faculty J', overall_percentage: 75 }
+        ]
+    };
+    
+    // Create Top Overall Score Chart
+    if (chartData.topOverall) {
+        const topOverallCtx = document.getElementById('topOverallChart').getContext('2d');
+        new Chart(topOverallCtx, {
+            type: 'bar',
+            data: {
+                labels: [chartData.topOverall.faculty_name || 'N/A'],
+                datasets: [{
+                    label: 'Score (%)',
+                    data: [chartData.topOverall.overall_percentage || 0],
+                    backgroundColor: '#17e891',
+                    borderColor: '#15d084',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: `${chartData.topOverall.overall_percentage || 0}% - ${chartData.topOverall.final_rating || 'N/A'}`,
+                        color: '#e0e0e0'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(224, 224, 224, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(224, 224, 224, 0.1)' }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Create Top 10 Highest Scores Chart
+    if (chartData.topHighest && chartData.topHighest.length > 0) {
+        const topHighestCtx = document.getElementById('topHighestChart').getContext('2d');
+        new Chart(topHighestCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.topHighest.map(item => item.faculty_name || 'N/A'),
+                datasets: [{
+                    label: 'Score (%)',
+                    data: chartData.topHighest.map(item => item.overall_percentage || 0),
+                    backgroundColor: '#28a745',
+                    borderColor: '#20c997',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: '#e0e0e0', font: { size: 10 } },
+                        grid: { color: 'rgba(224, 224, 224, 0.1)' }
+                    },
+                    x: {
+                        ticks: { 
+                            color: '#e0e0e0', 
+                            font: { size: 10 },
+                            maxRotation: 45
+                        },
+                        grid: { color: 'rgba(224, 224, 224, 0.1)' }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Create Top 10 Lowest Scores Chart
+    if (chartData.topLowest && chartData.topLowest.length > 0) {
+        const topLowestCtx = document.getElementById('topLowestChart').getContext('2d');
+        new Chart(topLowestCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.topLowest.map(item => item.faculty_name || 'N/A'),
+                datasets: [{
+                    label: 'Score (%)',
+                    data: chartData.topLowest.map(item => item.overall_percentage || 0),
+                    backgroundColor: '#dc3545',
+                    borderColor: '#e74c3c',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: '#e0e0e0', font: { size: 10 } },
+                        grid: { color: 'rgba(224, 224, 224, 0.1)' }
+                    },
+                    x: {
+                        ticks: { 
+                            color: '#e0e0e0', 
+                            font: { size: 10 },
+                            maxRotation: 45
+                        },
+                        grid: { color: 'rgba(224, 224, 224, 0.1)' }
+                    }
+                }
+            }
+        });
+    }
+  });
+</script>
+
+</body>
+</html>

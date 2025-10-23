@@ -1,0 +1,104 @@
+<% var observerScheduleRaw = typeof observerScheduleRaw !== 'undefined' ? observerScheduleRaw : {}; %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>COPUS Observation Table</title>
+  <link rel="stylesheet" href="/css/Observer/copus_start.css">
+</head>
+<body>
+
+  <div class="header" id="timer">2:00</div>
+
+  <div class="copus-details card">
+    <h2 class="section-title">COPUS DETAILS</h2>
+    <hr class="bu" />
+
+    <div class="details-grid">
+      <div class="gr">
+        <p><strong>Fullname:</strong> <span><%= copusDetails.fullname || (observerScheduleRaw && observerScheduleRaw.faculty_name) %></span></p>
+        <p><strong>Department:</strong> <span><%= copusDetails.department || (observerScheduleRaw && observerScheduleRaw.faculty_department) %></span></p>
+        <p><strong>Date:</strong> <span>
+          <%= copusDetails.date || (observerScheduleRaw && observerScheduleRaw.observation_date ? new Date(observerScheduleRaw.observation_date).toLocaleDateString() : '') %>
+        </span></p>
+        <p><strong>Start Time:</strong> <span><%= copusDetails.startTime || (observerScheduleRaw && observerScheduleRaw.start_time) %></span></p>
+        <p><strong>End Time:</strong> <span><%= copusDetails.endTime || (observerScheduleRaw && observerScheduleRaw.end_time) %></span></p>
+        <p><strong>Year / Grade Level:</strong> <span><%= copusDetails.yearLevel || (observerScheduleRaw && observerScheduleRaw.year_level) %></span></p>
+      </div>
+
+      <div class="gr">
+        <p><strong>Semester:</strong> <span><%= copusDetails.semester || (observerScheduleRaw && observerScheduleRaw.semester) %></span></p>
+        <p><strong>Subject Name:</strong> <span><%= copusDetails.subjectName || (observerScheduleRaw && (observerScheduleRaw.subject || observerScheduleRaw.subject_name || observerScheduleRaw.faculty_subject_name)) %></span></p>
+        <p><strong>Subject Type:</strong> <span><%= copusDetails.subjectType || (observerScheduleRaw && (observerScheduleRaw.subject_type || observerScheduleRaw.modality)) %></span></p>
+        <p><strong>Room:</strong> <span><%= copusDetails.room || (observerScheduleRaw && (observerScheduleRaw.room || observerScheduleRaw.classroom || observerScheduleRaw.faculty_room)) %></span></p>
+        <p><strong>Observer:</strong> <span><%= copusDetails.observer %></span></p>
+        <p><strong>Copus Type:</strong> <span><%= copusDetails.copusType || (observerScheduleRaw && (observerScheduleRaw.copus_type || observerScheduleRaw.copus)) %></span></p>
+
+      </div>
+    </div>
+
+    <hr class="bu" />
+    <p class="instructions">
+      <strong>Instructions:</strong> For each 2-minute interval, check columns to show what's happening in each category. Check multiple columns where appropriate.
+    </p>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 30px 0 30px;">
+    <h2 style="color: #2f5597; margin: 0;">COPUS 1</h2>
+
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <span id="autoSaveIndicator" style="color: #28a745; font-size: 0.9rem; display: none;">
+        <i class="bi bi-check-circle-fill"></i> Saved
+      </span>
+      
+      <button type="button" id="startBtn">
+        ⏱️ <span class="btn-text">Start Timer</span>
+      </button>
+
+      <button type="button" id="globalEditBtn">
+        ✏️ <span class="btn-text">Edit</span>
+      </button>
+
+      <button type="submit" id="submitBtn" form="copusForm">
+            ✅ <span class="btn-text">SUBMIT</span>
+            <span class="spinner" style="display:none;"></span>
+      </button>
+
+    </div>
+  </div><form id="copusForm" method="POST" action="/observer_copus_result1">
+  <input type="hidden" id="copusDetailsId" name="copusDetailsId" value="<%= copusDetails.id %>">
+  <div id="tablesContainer">
+  </div>
+</form>
+
+<script>
+  // Debug: inspect server-provided copusDetails in the browser console
+  const __copusDetails = JSON.parse('<%- JSON.stringify(copusDetails || {}) %>');
+  console.log('copusDetails (server-provided):', __copusDetails);
+  console.log('copusDetails.date:', __copusDetails.date);
+  console.log('copusDetails.subjectName:', __copusDetails.subjectName);
+  console.log('copusDetails.subjectType:', __copusDetails.subjectType);
+  console.log('copusDetails.room:', __copusDetails.room);
+  
+  // Also log the raw schedule
+  const __rawSchedule = JSON.parse('<%- JSON.stringify(observerScheduleRaw || {}) %>');
+  console.log('observerScheduleRaw:', __rawSchedule);
+  console.log('observerScheduleRaw.observation_date:', __rawSchedule.observation_date);
+  console.log('observerScheduleRaw.subject:', __rawSchedule.subject);
+  console.log('observerScheduleRaw.subject_type:', __rawSchedule.subject_type);
+  console.log('observerScheduleRaw.room:', __rawSchedule.room);
+  
+  // Pass existing observation data from backend to frontend
+  // Use JSON.parse on a string to avoid inline EJS expression warnings in some linters
+  const existingObservationData = JSON.parse('<%- JSON.stringify(copusObservation && copusObservation.observations ? copusObservation.observations : []) %>');
+  console.log('Existing observation data loaded:', existingObservationData);
+  
+  // Pass timer state from backend
+  const savedTimerState = JSON.parse('<%- JSON.stringify(copusObservation && copusObservation.timerState ? copusObservation.timerState : null) %>');
+  console.log('Saved timer state loaded:', savedTimerState);
+</script>
+<script src="/js/Observer/copus_start.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!-- Account Activation Modal -->
+<!-- This modal appears BEFORE the password change modal when isFirstLogin is true -->
+<% if (typeof user !== 'undefined' && user && user.isFirstLogin === true) { %>
+<div class="modal fade" id="activateAccountModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="activateAccountModalLabel" aria-hidden="true" style="z-index: 100000;">
+  <div class="modal-dialog modal-dialog-centered" style="z-index: 100001; position: relative;">
+    <div class="modal-content" style="background: linear-gradient(135deg, #1a2a3a, #2c3e50); border: 2px solid #17e891; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); position: relative; z-index: 100002;">
+      
+      <!-- Modal Header -->
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); background: rgba(23, 232, 145, 0.1);">
+        <h5 class="modal-title" id="activateAccountModalLabel" style="color: #17e891; font-weight: 600;">
+          <i class="bi bi-check-circle-fill me-2"></i>Activate Your Account
+        </h5>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body" style="color: #e0e0e0;">
+        <!-- Activation Notice Alert -->
+        <div class="alert" style="background-color: #d1ecf1; border-left: 4px solid #17a2b8; color: #0c5460; margin-bottom: 1.5rem; border-radius: 8px;">
+          <div style="display: flex; align-items: center;">
+            <i class="bi bi-info-circle-fill me-2" style="font-size: 1.5rem;"></i>
+            <div>
+              <strong>Account Activation Required</strong>
+              <p class="mb-0" style="font-size: 0.9rem; margin-top: 0.25rem;">
+                Your account is currently inactive. Please activate your account to proceed with the system setup.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Welcome Message -->
+        <div style="background-color: rgba(23, 232, 145, 0.1); border-left: 4px solid #17e891; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <p class="mb-0" style="font-size: 0.95rem; color: #e0e0e0;">
+            <i class="bi bi-person-check-fill me-2" style="color: #17e891;"></i>
+            Welcome to the <strong style="color: #17e891;">PHINMA Copus System</strong>! 
+          </p>
+          <p class="mb-0 mt-2" style="font-size: 0.9rem; color: #b0b0b0;">
+            To complete your account setup, please click the <strong>Activate</strong> button below. After activation, you will be prompted to change your temporary password.
+          </p>
+        </div>
+
+        <!-- Next Steps Info -->
+        <div style="background-color: rgba(255, 193, 7, 0.1); border-left: 4px solid #ffc107; padding: 1rem; border-radius: 8px;">
+          <p style="margin: 0; color: #ffc107; font-weight: bold;">
+            <i class="bi bi-lightning-fill me-2"></i>What happens next?
+          </p>
+          <ol style="margin: 10px 0 0 0; padding-left: 20px; color: #b0b0b0; font-size: 0.9rem;">
+            <li>Click <strong style="color: #17e891;">Activate</strong> to activate your account</li>
+            <li>You will then be prompted to change your temporary password</li>
+            <li>Choose a strong, secure password for your account</li>
+            <li>Access the system with your new credentials</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Modal Footer with Buttons -->
+      <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.1); background: rgba(0, 0, 0, 0.2);">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          id="cancelActivationBtn"
+          style="background-color: #6c757d; border: none; padding: 0.5rem 1.5rem; border-radius: 6px; font-weight: 500;"
+          onmouseover="this.style.backgroundColor='#5a6268';"
+          onmouseout="this.style.backgroundColor='#6c757d';"
+        >
+          <i class="bi bi-x-circle me-1"></i>Cancel
+        </button>
+        <button 
+          type="button" 
+          class="btn" 
+          id="activateAccountBtn"
+          style="background: linear-gradient(135deg, #17e891, #14c97a); color: #0f2027; font-weight: 600; border: none; padding: 0.5rem 2rem; border-radius: 6px; box-shadow: 0 4px 15px rgba(23, 232, 145, 0.3);"
+          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(23, 232, 145, 0.5)';"
+          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(23, 232, 145, 0.3)';"
+        >
+          <i class="bi bi-check-circle-fill me-1"></i>Activate
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript for Account Activation Modal -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show activation modal first on page load if user has isFirstLogin true
+    const activateAccountModal = document.getElementById('activateAccountModal');
+    if (activateAccountModal) {
+        const modal = new bootstrap.Modal(activateAccountModal, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+
+        // Fix z-index and pointer events after modal is shown
+        activateAccountModal.addEventListener('shown.bs.modal', function () {
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.style.zIndex = '99999';
+                backdrop.style.pointerEvents = 'none';
+            }
+            
+            activateAccountModal.style.zIndex = '100000';
+            activateAccountModal.style.pointerEvents = 'auto';
+            
+            const modalDialog = activateAccountModal.querySelector('.modal-dialog');
+            if (modalDialog) {
+                modalDialog.style.zIndex = '100001';
+                modalDialog.style.position = 'relative';
+                modalDialog.style.pointerEvents = 'auto';
+            }
+            
+            const modalContent = activateAccountModal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.style.pointerEvents = 'auto';
+                modalContent.style.position = 'relative';
+                modalContent.style.zIndex = '100002';
+            }
+        });
+
+        // Handle Activate button click
+        const activateBtn = document.getElementById('activateAccountBtn');
+        if (activateBtn) {
+            activateBtn.addEventListener('click', function() {
+                // Close activation modal
+                modal.hide();
+                
+                // Wait for modal to close, then show password change modal
+                activateAccountModal.addEventListener('hidden.bs.modal', function () {
+                    const firstLoginModal = document.getElementById('firstLoginModal');
+                    if (firstLoginModal) {
+                        const passwordModal = new bootstrap.Modal(firstLoginModal, {
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+                        passwordModal.show();
+                    }
+                }, { once: true }); // Only fire once
+            });
+        }
+
+        // Handle Cancel button click - logout user
+        const cancelBtn = document.getElementById('cancelActivationBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                // Show confirmation
+                if (confirm('Are you sure you want to cancel? You will be logged out.')) {
+                    // Redirect to logout
+                    window.location.href = '/logout';
+                }
+            });
+        }
+    }
+});
+</script>
+<% } %>
