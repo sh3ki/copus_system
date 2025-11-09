@@ -331,6 +331,17 @@ const observerController = { // Start of the observerController object
 
             console.log('[getScheduleManagement] All faculty observations query result:', allFacultyObservations ? allFacultyObservations.length : 'undefined');
 
+            // Fetch COPUS observations started by the current user to determine which schedules they've started
+            console.log('[getScheduleManagement] Fetching current user COPUS observations...');
+            const CopusObservation = require('../model/copusObservation');
+            const userCopusObservations = await CopusObservation.find({
+                observerId: currentUser._id
+            })
+            .select('scheduleId copusNumber')
+            .lean();
+
+            console.log(`[getScheduleManagement] Found ${userCopusObservations.length} COPUS observations by current user`);
+
             console.log(`[getScheduleManagement] Fetched ${facultySchedules.length} faculty schedules and ${observerSchedules.length} observer schedules`);
 
             res.render('Observer/schedule_management', {
@@ -338,6 +349,7 @@ const observerController = { // Start of the observerController object
                 observerSchedules: observerSchedules || [],
                 facultyUsers: facultyUsers || [],
                 allFacultyObservations: allFacultyObservations || [],
+                userCopusObservations: userCopusObservations || [],
                 currentUser,
                 firstName: currentUser.firstname,
                 lastName: currentUser.lastname,
@@ -708,17 +720,9 @@ const observerController = { // Start of the observerController object
                 }
             }
 
-            // Enforce single starter: if already started by someone else, prevent another user from starting
-            if (schedule.startedBy) {
-                // If startedBy is same as current user, allow continue; otherwise block
-                if (schedule.startedBy.toString() !== currentUser._id.toString()) {
-                    return res.status(409).json({ success: false, message: 'COPUS already started by another user' });
-                }
-                // else allow to continue (already in progress by this user)
-            } else {
-                // If not yet started, set startedBy and startedAt and update status to in_progress
-                schedule.startedBy = currentUser._id;
-                schedule.startedAt = new Date();
+            // Allow multiple observers to start their own COPUS observations independently
+            // Update schedule status to in_progress if not already
+            if (schedule.status === 'approved') {
                 schedule.status = 'in_progress';
                 await schedule.save();
             }
@@ -1032,23 +1036,32 @@ const observerController = { // Start of the observerController object
 
             console.log(`[startCopus1Observation] Found schedule: ${schedule._id}, Current Status: ${schedule.status}`);
             
+            // Allow Observer (SLC) and Super Admin to observe ANY schedule
+            // Observer (ALC) must be the assigned observer
             let isAssignedObserver = false;
+            const isSLCorSuperAdmin = user.role === 'Observer (SLC)' || user.role === 'super_admin';
 
-            // Check if it's the new ObserverSchedule model
-            if (schedule.observer_id) {
-                // New ObserverSchedule model - check if current user is the observer
-                isAssignedObserver = schedule.observer_id._id.equals(user.id);
-                console.log(`[startCopus1Observation] ObserverSchedule model - User ${user.id} is ${isAssignedObserver ? '' : 'NOT '}the assigned observer`);
-            } else if (schedule.observers) {
-                // Old Schedule model - check observers array
-                console.log(`[startCopus1Observation] Schedule observers:`, schedule.observers);
-                isAssignedObserver = schedule.observers.some(obs => {
-                    const match = obs.observer_id && obs.observer_id._id.equals(user.id) && (obs.status === 'accepted' || obs.status === 'pending');
-                    if (match) {
-                        console.log(`[startCopus1Observation] User ${user.id} found as assigned observer with status ${obs.status}.`);
-                    }
-                    return match;
-                });
+            if (isSLCorSuperAdmin) {
+                // SLC and Super Admin can observe any schedule
+                isAssignedObserver = true;
+                console.log(`[startCopus1Observation] User ${user.id} is ${user.role} - allowed to observe any schedule`);
+            } else {
+                // Check if it's the new ObserverSchedule model
+                if (schedule.observer_id) {
+                    // New ObserverSchedule model - check if current user is the observer
+                    isAssignedObserver = schedule.observer_id._id.equals(user.id);
+                    console.log(`[startCopus1Observation] ObserverSchedule model - User ${user.id} is ${isAssignedObserver ? '' : 'NOT '}the assigned observer`);
+                } else if (schedule.observers) {
+                    // Old Schedule model - check observers array
+                    console.log(`[startCopus1Observation] Schedule observers:`, schedule.observers);
+                    isAssignedObserver = schedule.observers.some(obs => {
+                        const match = obs.observer_id && obs.observer_id._id.equals(user.id) && (obs.status === 'accepted' || obs.status === 'pending');
+                        if (match) {
+                            console.log(`[startCopus1Observation] User ${user.id} found as assigned observer with status ${obs.status}.`);
+                        }
+                        return match;
+                    });
+                }
             }
 
             if (!isAssignedObserver) {
@@ -1302,13 +1315,24 @@ const observerController = { // Start of the observerController object
             console.log(`[startCopus2Observation] Found schedule: ${schedule._id}, Current Status: ${schedule.status}`);
             console.log(`[startCopus2Observation] Schedule observers:`, schedule.observers);
 
-            const isAssignedObserver = schedule.observers.some(obs => {
-                const match = obs.observer_id.equals(user.id) && (obs.status === 'accepted' || obs.status === 'pending');
-                if (match) {
-                    console.log(`[startCopus2Observation] User ${user.id} found as assigned observer with status ${obs.status}.`);
-                }
-                return match;
-            });
+            // Allow Observer (SLC) and Super Admin to observe ANY schedule
+            // Observer (ALC) must be the assigned observer
+            let isAssignedObserver = false;
+            const isSLCorSuperAdmin = user.role === 'Observer (SLC)' || user.role === 'super_admin';
+
+            if (isSLCorSuperAdmin) {
+                // SLC and Super Admin can observe any schedule
+                isAssignedObserver = true;
+                console.log(`[startCopus2Observation] User ${user.id} is ${user.role} - allowed to observe any schedule`);
+            } else {
+                isAssignedObserver = schedule.observers.some(obs => {
+                    const match = obs.observer_id.equals(user.id) && (obs.status === 'accepted' || obs.status === 'pending');
+                    if (match) {
+                        console.log(`[startCopus2Observation] User ${user.id} found as assigned observer with status ${obs.status}.`);
+                    }
+                    return match;
+                });
+            }
 
             if (!isAssignedObserver) {
                 console.log(`[startCopus2Observation] User ${user.id} is NOT an assigned or active observer for this schedule.`);
@@ -1395,13 +1419,24 @@ const observerController = { // Start of the observerController object
             console.log(`[startCopus3Observation] Found schedule: ${schedule._id}, Current Status: ${schedule.status}`);
             console.log(`[startCopus3Observation] Schedule observers:`, schedule.observers);
 
-            const isAssignedObserver = schedule.observers.some(obs => {
-                const match = obs.observer_id.equals(user.id) && (obs.status === 'accepted' || obs.status === 'pending');
-                if (match) {
-                    console.log(`[startCopus3Observation] User ${user.id} found as assigned observer with status ${obs.status}.`);
-                }
-                return match;
-            });
+            // Allow Observer (SLC) and Super Admin to observe ANY schedule
+            // Observer (ALC) must be the assigned observer
+            let isAssignedObserver = false;
+            const isSLCorSuperAdmin = user.role === 'Observer (SLC)' || user.role === 'super_admin';
+
+            if (isSLCorSuperAdmin) {
+                // SLC and Super Admin can observe any schedule
+                isAssignedObserver = true;
+                console.log(`[startCopus3Observation] User ${user.id} is ${user.role} - allowed to observe any schedule`);
+            } else {
+                isAssignedObserver = schedule.observers.some(obs => {
+                    const match = obs.observer_id.equals(user.id) && (obs.status === 'accepted' || obs.status === 'pending');
+                    if (match) {
+                        console.log(`[startCopus3Observation] User ${user.id} found as assigned observer with status ${obs.status}.`);
+                    }
+                    return match;
+                });
+            }
 
             if (!isAssignedObserver) {
                 console.log(`[startCopus3Observation] User ${user.id} is NOT an assigned or active observer for this schedule.`);

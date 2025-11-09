@@ -584,32 +584,30 @@
                             </td>
               <td>
                 <% 
-                  // Helper flags for button rendering
-                  const startedById = schedule.startedBy ? (typeof schedule.startedBy === 'object' ? (schedule.startedBy._id || schedule.startedBy).toString() : schedule.startedBy.toString()) : null;
-                  const isStarted = !!startedById;
-                  const isStartedByCurrent = isStarted && startedById === (currentUser._id ? currentUser._id.toString() : currentUser.id);
+                  // Check if current user has started their own COPUS observation for this schedule
+                  const userHasStartedCopus = userCopusObservations && userCopusObservations.some(obs => 
+                    obs.scheduleId.toString() === schedule._id.toString()
+                  );
                 %>
                 <% if (currentUser.role === 'Observer (SLC)') { %>
                   <% if (schedule.status === 'pending') { %>
                     <button class="btn btn-sm btn-success" onclick="approveSchedule('<%= schedule._id %>')">Approve</button>
                     <button class="btn btn-sm btn-danger" onclick="disapproveSchedule('<%= schedule._id %>')">Disapprove</button>
                   <% } else if (schedule.status === 'approved') { %>
-                    <% if (!isStarted) { %>
+                    <% if (!userHasStartedCopus) { %>
                       <button class="btn btn-sm btn-warning" onclick="startCopus('<%= schedule._id %>')">Start COPUS</button>
-                    <% } else if (isStartedByCurrent) { %>
+                    <% } else { %>
                       <button class="btn btn-sm btn-info" onclick="startCopus('<%= schedule._id %>')">
                         <i class="bi bi-play-circle"></i> Continue COPUS
                       </button>
-                    <% } else { %>
-                      <button class="btn btn-sm btn-secondary" disabled>Ongoing COPUS</button>
                     <% } %>
                   <% } else if (schedule.status === 'in_progress') { %>
-                    <% if (isStartedByCurrent) { %>
+                    <% if (!userHasStartedCopus) { %>
+                      <button class="btn btn-sm btn-warning" onclick="startCopus('<%= schedule._id %>')">Start COPUS</button>
+                    <% } else { %>
                       <button class="btn btn-sm btn-info" onclick="startCopus('<%= schedule._id %>')">
                         <i class="bi bi-play-circle"></i> Continue COPUS
                       </button>
-                    <% } else { %>
-                      <button class="btn btn-sm btn-secondary" disabled>Ongoing COPUS</button>
                     <% } %>
                   <% } else if (schedule.status === 'completed') { %>
                     <span class="text-muted">Completed</span>
@@ -620,36 +618,32 @@
                   <% // ALC can start immediately regardless of approval %>
                   <% if (schedule.status === 'completed') { %>
                     <span class="text-muted">Completed</span>
-                  <% } else if (!isStarted) { %>
+                  <% } else if (!userHasStartedCopus) { %>
                     <button class="btn btn-sm btn-warning" onclick="startCopus('<%= schedule._id %>')">Start COPUS</button>
-                  <% } else if (isStartedByCurrent) { %>
+                  <% } else { %>
                     <button class="btn btn-sm btn-info" onclick="startCopus('<%= schedule._id %>')">
                       <i class="bi bi-play-circle"></i> Continue COPUS
                     </button>
-                  <% } else { %>
-                    <button class="btn btn-sm btn-secondary" disabled>Ongoing COPUS</button>
                   <% } %>
                 <% } else { %>
                   <% // Other roles (Admin, Super Admin) - maintain existing behavior similar to SLC %>
                   <% if (schedule.status === 'pending') { %>
                     <span class="text-muted">Awaiting action</span>
                   <% } else if (schedule.status === 'approved') { %>
-                    <% if (!isStarted) { %>
+                    <% if (!userHasStartedCopus) { %>
                       <button class="btn btn-sm btn-warning" onclick="startCopus('<%= schedule._id %>')">Start COPUS</button>
-                    <% } else if (isStartedByCurrent) { %>
+                    <% } else { %>
                       <button class="btn btn-sm btn-info" onclick="startCopus('<%= schedule._id %>')">
                         <i class="bi bi-play-circle"></i> Continue COPUS
                       </button>
-                    <% } else { %>
-                      <button class="btn btn-sm btn-secondary" disabled>Ongoing COPUS</button>
                     <% } %>
                   <% } else if (schedule.status === 'in_progress') { %>
-                    <% if (isStartedByCurrent) { %>
+                    <% if (!userHasStartedCopus) { %>
+                      <button class="btn btn-sm btn-warning" onclick="startCopus('<%= schedule._id %>')">Start COPUS</button>
+                    <% } else { %>
                       <button class="btn btn-sm btn-info" onclick="startCopus('<%= schedule._id %>')">
                         <i class="bi bi-play-circle"></i> Continue COPUS
                       </button>
-                    <% } else { %>
-                      <button class="btn btn-sm btn-secondary" disabled>Ongoing COPUS</button>
                     <% } %>
                   <% } else if (schedule.status === 'completed') { %>
                     <span class="text-muted">Completed</span>

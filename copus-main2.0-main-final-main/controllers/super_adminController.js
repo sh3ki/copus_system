@@ -105,15 +105,9 @@ exports.startCopus1 = async (req, res) => {
         const currentUser = await User.findById(req.session.user.id);
         if (!currentUser) return res.status(401).send('Unauthorized');
 
-        // Enforce single-starter for Super Admin as well
-        if (schedule.startedBy && schedule.startedBy.toString() !== currentUser._id.toString()) {
-            return res.status(409).send('COPUS already started by another user');
-        }
-
-        // If not started yet, mark startedBy and status
-        if (!schedule.startedBy) {
-            schedule.startedBy = currentUser._id;
-            schedule.startedAt = new Date();
+        // Allow multiple users to start their own COPUS observations independently
+        // Update schedule status to in progress if not already
+        if (schedule.status !== 'in progress') {
             schedule.status = 'in progress';
             await schedule.save();
         }
@@ -162,12 +156,9 @@ exports.startCopus2 = async (req, res) => {
         const currentUser = await User.findById(req.session.user.id);
         if (!currentUser) return res.status(401).send('Unauthorized');
 
-        if (schedule.startedBy && schedule.startedBy.toString() !== currentUser._id.toString()) {
-            return res.status(409).send('COPUS already started by another user');
-        }
-        if (!schedule.startedBy) {
-            schedule.startedBy = currentUser._id;
-            schedule.startedAt = new Date();
+        // Allow multiple users to start their own COPUS observations independently
+        // Update schedule status to in progress if not already
+        if (schedule.status !== 'in progress') {
             schedule.status = 'in progress';
             await schedule.save();
         }
@@ -216,12 +207,9 @@ exports.startCopus3 = async (req, res) => {
         const currentUser = await User.findById(req.session.user.id);
         if (!currentUser) return res.status(401).send('Unauthorized');
 
-        if (schedule.startedBy && schedule.startedBy.toString() !== currentUser._id.toString()) {
-            return res.status(409).send('COPUS already started by another user');
-        }
-        if (!schedule.startedBy) {
-            schedule.startedBy = currentUser._id;
-            schedule.startedAt = new Date();
+        // Allow multiple users to start their own COPUS observations independently
+        // Update schedule status to in progress if not already
+        if (schedule.status !== 'in progress') {
             schedule.status = 'in progress';
             await schedule.save();
         }
@@ -1047,9 +1035,18 @@ exports.getScheduleManagement = async (req, res) => {
             .sort({ observation_date: 1, start_time: 1 })
             .lean();
 
+        // Fetch COPUS observations started by the current user to determine which schedules they've started
+        const CopusObservation = require('../model/copusObservation');
+        const userCopusObservations = await CopusObservation.find({
+            observerId: currentUser._id
+        })
+        .select('scheduleId copusNumber')
+        .lean();
+
         res.render('Super_Admin/schedule', {
             facultySchedules: schedulesToDisplay,
             observerSchedules: observerSchedules || [],
+            userCopusObservations: userCopusObservations || [],
             observers: allObservers,
             firstName: currentUser.firstname,
             lastName: currentUser.lastname,

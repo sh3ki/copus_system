@@ -545,9 +545,25 @@
             <span class="badge <%= badgeClass %> text-capitalize"><%= schedule.status %></span>
           </td>
           <td>
+            <% 
+              // Check if current user has started their own COPUS observation for this schedule
+              const userHasStartedCopus = userCopusObservations && userCopusObservations.some(obs => 
+                obs.scheduleId.toString() === schedule._id.toString()
+              );
+            %>
             <% if (schedule.status === 'pending') { %>
               <button class="btn btn-sm btn-success me-1" onclick="approveObserverSchedule('<%= schedule._id %>')">Approve</button>
               <button class="btn btn-sm btn-danger" onclick="disapproveObserverSchedule('<%= schedule._id %>')">Disapprove</button>
+            <% } else if (schedule.status === 'approved' || schedule.status === 'in_progress') { %>
+              <% if (!userHasStartedCopus) { %>
+                <button class="btn btn-sm btn-warning" onclick="startCopusFromSchedule('<%= schedule._id %>', '<%= schedule.copus_type %>')">Start COPUS</button>
+              <% } else { %>
+                <button class="btn btn-sm btn-info" onclick="startCopusFromSchedule('<%= schedule._id %>', '<%= schedule.copus_type %>')">
+                  <i class="bi bi-play-circle"></i> Continue COPUS
+                </button>
+              <% } %>
+            <% } else if (schedule.status === 'completed') { %>
+              <span class="text-muted">Completed</span>
             <% } else { %>
               <span class="text-muted">—</span>
             <% } %>
@@ -784,6 +800,28 @@
                 console.error('Error:', error);
                 alert('An error occurred while disapproving the schedule.');
             }
+        }
+    }
+
+    // Start COPUS observation from observer schedule
+    async function startCopusFromSchedule(scheduleId, copusType) {
+        try {
+            const response = await fetch(`/observer/schedule/${scheduleId}/start-copus`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            const result = await response.json();
+            if (result.success && result.redirectUrl) {
+                window.location.href = result.redirectUrl;
+            } else {
+                alert('Error: ' + (result.message || 'Failed to start COPUS observation'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while starting COPUS observation.');
         }
     }
 });
